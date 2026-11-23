@@ -25,7 +25,19 @@
     "plugins": [
       "expo-font",
       "expo-status-bar",
-      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
-    ]
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d17cec00-3d93-4345-a81e-12d64682230d"
+      }
+    }
   }
 }
