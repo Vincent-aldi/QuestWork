@@ -1,19 +1,19 @@
-// Alamat backend HRIS. Ganti di sini kalau IP/port server berubah.
-// Catatan: HP/emulator harus satu jaringan WiFi dengan server (192.168.x.x = jaringan lokal).
-// Tanpa garis miring di akhir. "localhost" TIDAK bisa dipakai dari HP.
-export const API_BASE_URL = 'http://192.168.18.104';
+// Alamat backend HRIS (PRODUKSI). Tanpa garis miring di akhir.
+// Semua endpoint ( /login, /get-my-tasks, dst ) ditambahkan di belakang alamat ini.
+// Untuk uji lokal, ganti sementara ke 'http://192.168.18.104' (dan aktifkan usesCleartextTraffic di app.json).
+export const API_BASE_URL = 'https://apihris.leokrisnoto.id/api-hris';
 export const API_TIMEOUT_MS = 15000;
 
 // Identitas klien yang dikirim ke backend supaya admin/server bisa mendeteksi login dari aplikasi mobile.
 export const APP_NAME = 'QuestWork';
-export const APP_VERSION = '1.0.0'; // samakan dengan "version" di app.json
+export const APP_VERSION = '1.1.0'; // samakan dengan "version" di app.json
 export const CLIENT_TYPE = 'mobile';
 
 // API task employee: tugas yang diberikan KEPADA user yang login (GET + Bearer token).
-export const TASKS_API_URL = 'http://192.168.18.104/get-my-tasks';
+export const TASKS_API_URL = `${API_BASE_URL}/get-my-tasks`;
 
 // API leaderboard: laporan performa task seluruh karyawan (GET + Bearer token).
-export const LEADERBOARD_API_URL = 'http://192.168.18.104/get-task-performance-report';
+export const LEADERBOARD_API_URL = `${API_BASE_URL}/get-task-performance-report`;
 
 // (Tidak dipakai lagi oleh Papan Misi, disisakan untuk referensi.) Sumber daftar tugas:
 //   'my'   -> GET /get-my-tasks            tugas yang diberikan KEPADA user yang login (disarankan untuk karyawan)

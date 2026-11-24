@@ -2,7 +2,7 @@
   "expo": {
     "name": "QuestWork",
     "slug": "QuestWork",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -24,15 +24,7 @@
     },
     "plugins": [
       "expo-font",
-      "expo-status-bar",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
-      ]
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {
