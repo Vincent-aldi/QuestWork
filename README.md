@@ -9,7 +9,7 @@ Aplikasi manajemen tugas berbasis gamifikasi (quest, EXP, level, dan reward) unt
 - Profil dan ubah profil
 
 ### Cara instal
-1. Unduh file `QuestWork-v1.0.0.apk` di bagian **Releases**.
+1. Unduh file `QuestWork.apk` di bagian **Releases**.
 2. Buka file di HP Android, lalu izinkan **"Instal dari sumber tidak dikenal"** jika diminta.
 3. Jika muncul peringatan Google Play Protect, pilih **Tetap instal**.
 
