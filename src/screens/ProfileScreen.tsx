@@ -19,6 +19,8 @@ interface Props {
   extras: ProfileExtras;
   onLogout: () => void;
   onSoon: () => void;
+  notifCount: number; // jumlah notifikasi yang perlu perhatian (lencana)
+  onOpenNotifications: () => void;
   onGoRewards: () => void;
   onSaveProfile: (data: { name: string; role: string; photoUri?: string }) => void;
 }
@@ -142,6 +144,7 @@ function ConfigRow({
   sub,
   onPress,
   divider,
+  right,
 }: {
   icon: MCIName;
   tone: Tone;
@@ -149,6 +152,7 @@ function ConfigRow({
   sub: string;
   onPress: () => void;
   divider?: boolean;
+  right?: React.ReactNode; // pengganti panah di kanan (mis. Switch)
 }) {
   return (
     <Pressable onPress={onPress} style={[styles.cfgRow, divider && styles.cfgDivider]} accessibilityRole="button">
@@ -159,7 +163,7 @@ function ConfigRow({
         <Text style={styles.cfgTitle}>{title}</Text>
         <Text style={styles.cfgSub}>{sub}</Text>
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSubtle} />
+      {right ?? <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSubtle} />}
     </Pressable>
   );
 }
@@ -174,6 +178,8 @@ export default function ProfileScreen({
   extras,
   onLogout,
   onSoon,
+  notifCount,
+  onOpenNotifications,
   onGoRewards,
   onSaveProfile,
 }: Props) {
@@ -445,8 +451,18 @@ export default function ProfileScreen({
             icon="bell-ring-outline"
             tone="primary"
             title="Notifikasi Tugas & Deadline"
-            sub="Pengingat bounty dan giliran sprint"
-            onPress={onSoon}
+            sub="Cek pengingat tugas dan deadline kamu"
+            onPress={onOpenNotifications}
+            right={
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {notifCount > 0 && (
+                  <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>{notifCount > 9 ? '9+' : notifCount}</Text>
+                  </View>
+                )}
+                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSubtle} />
+              </View>
+            }
           />
           <ConfigRow
             icon="palette-outline"
@@ -483,6 +499,17 @@ const CARD = {
 } as const;
 
 const styles = StyleSheet.create({
+  notifBadge: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.danger,
+  },
+  notifBadgeText: { fontFamily: fonts.outfitBold, fontSize: 11, color: '#3a0a0a' },
+
   /* hero */
   hero: { borderRadius: 20, padding: 16, gap: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.outline },
   editBtn: {

@@ -17,7 +17,11 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import { colors } from './src/theme/tokens';
 import { logout } from './src/services/authApi';
 import { setUnauthorizedHandler } from './src/services/api';
+import { initNotifications } from './src/services/reminders';
 import type { Player } from './src/types';
+
+// Atur tampilan notifikasi & saluran Android sekali saat aplikasi dimulai.
+initNotifications();
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(false);

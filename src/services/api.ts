@@ -195,6 +195,7 @@ export function toTask(t: HrisTask, now: Date = new Date()): Task {
     claimedAt: claimed ? (approvedAt ? `${hhmm(approvedAt)} WIB` : undefined) : undefined,
     deadlineOrder: end ? end.getTime() : 0,
     note: t.submission_notes || undefined,
+    attachmentUrl: t.attachment_url || undefined,
     revisionNote: t.status === 'revised' ? t.revision_notes || undefined : undefined,
     detail: {
       description: t.description || undefined,
@@ -280,13 +281,16 @@ const clientHeaders: Record<string, string> = {
   'X-Platform': Platform.OS, // 'android' | 'ios'
   'X-App-Name': APP_NAME,
   'X-App-Version': APP_VERSION,
-  'User-Agent': `${APP_NAME}/${APP_VERSION} (${CLIENT_TYPE}; ${Platform.OS} ${OS_VERSION})`,
+  // Diawali "Mozilla/5.0" supaya tidak ditolak proteksi hosting (InfinityFree memutus klien tanpa UA browser);
+  // identitas aplikasi tetap terbaca di bagian belakang.
+  'User-Agent': `Mozilla/5.0 (Linux; ${Platform.OS} ${OS_VERSION}) ${APP_NAME}/${APP_VERSION} (${CLIENT_TYPE})`,
 };
 
 // ---------- Request dasar ----------
 
 async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
   const url = /^https?:\/\//.test(path) ? path : `${API_BASE_URL}${path}`;
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
@@ -308,24 +312,41 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown):
       0,
       e?.name === 'AbortError'
         ? 'Server tidak merespons. Cek koneksi/WiFi kamu.'
-        : 'Tidak bisa terhubung ke server. Pastikan HP & server satu jaringan WiFi.',
+        : 'Tidak bisa terhubung ke server. Cek koneksi internet / alamat server.',
     );
   } finally {
     clearTimeout(timer);
   }
 
+  const status = res.status;
   let json: any = null;
+  let rawText = '';
   try {
-    json = await res.json();
+    rawText = await res.text();
+    json = JSON.parse(rawText);
   } catch {
     // respons bukan JSON
   }
 
-  if (!res.ok || json?.status !== 'success') {
-    if (res.status === 401 && authToken) onUnauthorized?.();
+  if (__DEV__ && (status < 200 || status >= 300)) {
+    console.warn(`[api] ${method} ${url} -> ${status}`, rawText.slice(0, 300));
+  }
+
+  // Status 200 tapi isinya bukan JSON = server membalas halaman HTML (mis. halaman proteksi hosting,
+  // halaman error PHP, atau URL salah), bukan balasan dari API HRIS.
+  if (status >= 200 && status < 300 && json === null) {
+    if (__DEV__) console.warn(`[api] ${method} ${url} -> ${status}, bukan JSON:`, rawText.slice(0, 200));
     throw new ApiError(
-      res.status,
-      typeof json?.message === 'string' ? json.message : `Server membalas error (${res.status}).`,
+      status,
+      'Server membalas halaman HTML, bukan data API. Cek alamat server, atau hosting memblokir akses aplikasi.',
+    );
+  }
+
+  if (status < 200 || status >= 300 || json?.status !== 'success') {
+    if (status === 401 && authToken) onUnauthorized?.();
+    throw new ApiError(
+      status,
+      typeof json?.message === 'string' ? json.message : `Server membalas error (${status}).`,
     );
   }
   return json.data as T;

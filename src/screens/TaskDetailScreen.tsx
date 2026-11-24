@@ -14,11 +14,26 @@ interface Props {
   initials: string;
   photoUri?: string;
   onBack: () => void;
-  onSubmit: (note: string) => void;
+  onSubmit: (link: string, note: string) => void;
   onSoon: () => void;
 }
 
 const HEADER_H = 64;
+
+/** Tautan wajib berupa URL http(s) yang utuh, mis. https://figma.com/file/abc */
+const normalizeUrl = (raw: string): string | null => {
+  const v = raw.trim();
+  if (!v || /\s/.test(v)) return null;
+  const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+  try {
+    const u = new URL(withScheme);
+    if (!/^https?:$/.test(u.protocol)) return null;
+    if (!u.hostname.includes('.') || u.hostname.startsWith('.') || u.hostname.endsWith('.')) return null;
+    return withScheme;
+  } catch {
+    return null;
+  }
+};
 
 const TAG: Record<TaskVariant, { bg: string; fg: string; shadow?: string }> = {
   weekly: { bg: taskPalette.weekly.btn, fg: taskPalette.weekly.btnText, shadow: taskPalette.weekly.btnShadow },
@@ -34,6 +49,7 @@ export default function TaskDetailScreen({ task, points, initials, photoUri, onB
   const checklist = detail?.checklist ?? [];
 
   const [checked, setChecked] = useState<boolean[]>(() => checklist.map(() => false));
+  const [link, setLink] = useState('');
   const [note, setNote] = useState('');
 
   // Tombol back Android kembali ke daftar tugas
@@ -56,19 +72,20 @@ export default function TaskDetailScreen({ task, points, initials, photoUri, onB
   const toggle = (i: number) => setChecked((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
 
   // Bukti wajib diisi sebelum misi bisa diserahkan (langkah terakhir).
-  const hasEvidence = note.trim().length > 0;
-  const needsEvidence = completes && !hasEvidence;
+  const validLink = normalizeUrl(link);
+  const linkInvalid = link.trim().length > 0 && !validLink;
+  const needsEvidence = completes && !validLink;
   const canSubmit = allChecked && !needsEvidence;
 
   const submit = () => {
     if (!canSubmit) return;
-    onSubmit(note.trim());
+    onSubmit(validLink ?? '', note.trim());
   };
 
   const hint = !allChecked
     ? 'Centang semua kriteria verifikasi untuk melanjutkan.'
     : needsEvidence
-      ? 'Isi catatan atau tautan bukti pengerjaan dulu agar misi bisa diserahkan.'
+      ? 'Isi tautan bukti yang valid (https://...) dulu agar misi bisa diserahkan.'
       : !completes
       ? `Progres akan menjadi ${nextDone}/${total}. Imbalan diklaim saat progres penuh.`
       : null;
@@ -218,24 +235,40 @@ export default function TaskDetailScreen({ task, points, initials, photoUri, onB
           </View>
         )}
 
-        {/* Catatan & bukti */}
+        {/* Tautan bukti + ulasan */}
         <View style={styles.card}>
           <View style={styles.headingRow}>
             <MaterialCommunityIcons name="link-variant" size={17} color={colors.gold} />
-            <Text style={styles.heading}>Catatan Penyelesaian & Tautan Bukti</Text>
+            <Text style={styles.heading}>Tautan Bukti</Text>
           </View>
-          <Text style={styles.hintSmall}>Sertakan catatan, link file, atau URL bukti pengerjaan (wajib diisi untuk menyerahkan misi).</Text>
+          <Text style={styles.hintSmall}>Tempel link hasil pengerjaan (Figma, Google Drive, GitHub, dll). Wajib diisi untuk menyerahkan misi.</Text>
+          <TextInput
+            value={link}
+            onChangeText={setLink}
+            placeholder="https://..."
+            placeholderTextColor={colors.placeholder}
+            selectionColor={colors.primarySoft}
+            keyboardType="url"
+            textContentType="URL"
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={[styles.input, styles.linkInput, linkInvalid ? styles.inputError : null]}
+          />
+          {linkInvalid ? <Text style={styles.errorText}>Tautan tidak valid. Contoh: https://drive.google.com/...</Text> : null}
+
+          <View style={[styles.headingRow, { marginTop: 4 }]}>
+            <MaterialCommunityIcons name="text-box-outline" size={17} color={colors.gold} />
+            <Text style={styles.heading}>Ulasan / Catatan</Text>
+          </View>
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder="https://..."
+            placeholder="Jelaskan singkat apa yang sudah dikerjakan (opsional)"
             placeholderTextColor={colors.placeholder}
             selectionColor={colors.primarySoft}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
-            autoCapitalize="none"
-            autoCorrect={false}
             style={styles.input}
           />
           <View style={styles.rowBetween}>
@@ -423,6 +456,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: colors.text,
   },
+  linkInput: { minHeight: 44, paddingVertical: 12 },
+  inputError: { borderWidth: 1, borderColor: colors.danger },
+  errorText: { fontFamily: fonts.jakartaRegular, fontSize: 12, lineHeight: 18, color: colors.danger },
   uploadBtn: {
     flexDirection: 'row',
     alignItems: 'center',

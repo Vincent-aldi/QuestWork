@@ -27,7 +27,8 @@ export interface Task {
   claimedAt?: string;
   deadlineOrder: number;
   detail?: TaskDetail; // dipakai layar Detail Tugas
-  note?: string; // catatan / tautan bukti dari pengguna saat menyerahkan
+  note?: string; // ulasan / catatan dari pengguna saat menyerahkan
+  attachmentUrl?: string; // tautan bukti pengerjaan (URL) saat menyerahkan
   pendingReview?: boolean; // sudah diserahkan, menunggu review atasan (poin belum cair)
   requiresReview?: boolean; // tugas ini butuh persetujuan atasan
   revisionNote?: string; // catatan atasan bila tugas dikembalikan untuk direvisi
