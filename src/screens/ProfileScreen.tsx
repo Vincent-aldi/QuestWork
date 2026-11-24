@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Avatar from '../components/dashboard/Avatar';
+import ConfirmDialog from '../components/ConfirmDialog';
 import EditProfileScreen from './EditProfileScreen';
 import { colors, fonts } from '../theme/tokens';
 import { EXP_PER_LEVEL, LEVEL_TITLES } from '../data/quests';
@@ -201,11 +202,7 @@ export default function ProfileScreen({
 
   const vouchers = rewards.filter((r) => redeemed.includes(r.id));
 
-  const confirmLogout = () =>
-    Alert.alert('Keluar?', 'Kamu akan kembali ke gerbang login.', [
-      { text: 'Batal', style: 'cancel' },
-      { text: 'Keluar', style: 'destructive', onPress: onLogout },
-    ]);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   if (editing) {
     return (
@@ -483,10 +480,43 @@ export default function ProfileScreen({
         </View>
       </View>
 
-      <Pressable onPress={confirmLogout} style={styles.logout} accessibilityRole="button">
-        <MaterialCommunityIcons name="logout" size={18} color={colors.danger} />
-        <Text style={styles.logoutText}>Keluar dari Sesi Guild (Logout)</Text>
+      <Pressable
+        onPress={() => setLogoutOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Keluar dari sesi"
+        style={({ pressed }) => [styles.logoutWrap, pressed && styles.logoutPressed]}
+      >
+        <LinearGradient
+          colors={['rgba(255,138,138,0.22)', 'rgba(255,138,138,0.06)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.logout}
+        >
+          <View style={styles.logoutIcon}>
+            <MaterialCommunityIcons name="logout" size={20} color={colors.danger} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.logoutText}>Keluar dari Sesi Guild</Text>
+            <Text style={styles.logoutSub}>Akhiri sesi di perangkat ini</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.danger} />
+        </LinearGradient>
       </Pressable>
+
+      <ConfirmDialog
+        visible={logoutOpen}
+        icon="logout"
+        title="Keluar dari Guild?"
+        message={`Sampai jumpa, ${player.name}! Kamu akan kembali ke gerbang login dan perlu masuk lagi untuk melanjutkan misi.`}
+        confirmLabel="Ya, Keluar"
+        cancelLabel="Tetap di Sini"
+        tone="danger"
+        onCancel={() => setLogoutOpen(false)}
+        onConfirm={() => {
+          setLogoutOpen(false);
+          onLogout();
+        }}
+      />
     </View>
   );
 }
@@ -673,16 +703,26 @@ const styles = StyleSheet.create({
   cfgSub: { fontFamily: fonts.jakartaRegular, fontSize: 11, lineHeight: 16, color: colors.textMuted },
 
   /* logout */
+  logoutWrap: { borderRadius: 16 },
+  logoutPressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   logout: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,138,138,0.1)',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,138,138,0.25)',
+    borderColor: 'rgba(255,138,138,0.35)',
   },
-  logoutText: { fontFamily: fonts.outfitBold, fontSize: 14, color: colors.danger },
+  logoutIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,138,138,0.16)',
+  },
+  logoutText: { fontFamily: fonts.outfitBold, fontSize: 15, lineHeight: 19, color: colors.danger },
+  logoutSub: { fontFamily: fonts.jakartaRegular, fontSize: 11, lineHeight: 15, color: colors.textMuted },
 });
